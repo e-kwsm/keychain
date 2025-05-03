@@ -22,16 +22,16 @@ clean: tmpclean
 	rm -rf keychain.1 keychain keychain.spec
 
 keychain.spec: keychain.spec.in keychain.sh VERSION
-	sed 's/KEYCHAIN_VERSION/$V/' keychain.spec.in > keychain.spec
+	sed 's/KEYCHAIN_VERSION/$V/' keychain.spec.in > $@
 
 keychain.1: keychain.pod keychain.sh VERSION
 	pod2man --name=keychain --release=$V \
 		--center='https://github.com/danielrobbins/keychain' \
-		keychain.pod keychain.1
-	sed -i.orig -e "s/^'br /.br /" keychain.1
+		keychain.pod $@
+	sed -i.orig -e "s/^'br /.br /" $@
 
 keychain.1.gz: keychain.1
-	gzip -9 keychain.1
+	gzip -9 $<
 
 GENKEYCHAINPL = open P, "keychain.txt" or die "cannot open keychain.txt"; \
 			while (<P>) { \
@@ -52,21 +52,22 @@ GENKEYCHAINPL = open P, "keychain.txt" or die "cannot open keychain.txt"; \
 			s/\#\#VERSION\#\#/$V/g || die; \
 		print
 
+.DELETE_ON_ERROR: keychain
 keychain: keychain.sh keychain.txt VERSION MAINTAINERS.txt
-	perl -e '$(GENKEYCHAINPL)' | sed -e 's/##CUR_YEAR##/$(Y)/g' >keychain || rm -f keychain
-	chmod +x keychain
+	perl -e '$(GENKEYCHAINPL)' | sed -e 's/##CUR_YEAR##/$(Y)/g' > $@
+	chmod +x $@
 
 keychain.txt: keychain.pod
-	pod2text keychain.pod keychain.txt
+	pod2text $< $@
 
 dist/keychain-$V.tar.gz: keychain keychain.1 keychain.spec
 	mkdir -p dist
 	rm -rf dist/keychain-$V
 	git archive --format=tar --prefix=keychain-$V/ HEAD | tar -xf - -C dist/
 	cp keychain keychain.1 keychain.spec dist/keychain-$V/
-	tar -C dist -czf dist/keychain-$V.tar.gz keychain-$V
+	tar -C dist -czf $@ keychain-$V
 	rm -rf dist/keychain-$V
-	ls -l dist/keychain-$V.tar.gz
+	ls -l $@
 
 # --- Release Automation Helpers ---
 .PHONY: release release-refresh
