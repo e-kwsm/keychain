@@ -23,17 +23,17 @@ keychain.pyz : Makefile $(shell find src/keychain -name '*.py') src/keychain/doc
 	find build/pyz-stage -name __pycache__ -type d -exec rm -rf {} + 2>/dev/null || true
 	python3 -m compileall -q build/pyz-stage
 	cp scripts/pyz_bootstrap.py build/pyz-stage/__main__.py
-	python3 -m zipapp build/pyz-stage -o keychain.pyz -p '/usr/bin/env python3' -c
-	chmod +x keychain.pyz
+	python3 -m zipapp build/pyz-stage -o $@ -p '/usr/bin/env python3' -c
+	chmod +x $@
 
 dist :
-	mkdir -p dist
+	mkdir -p $@
 
 dist/keychain-$(V).pyz : keychain.pyz | dist
-	cp keychain.pyz dist/keychain-$(V).pyz
+	cp $< $@
 
 dist/SHA256SUMS : dist/keychain-$(V).pyz
-	cd dist && sha256sum keychain-$(V).pyz > SHA256SUMS
+	cd $(@D) && sha256sum $< > $(@F)
 
 release-artifacts : dist/keychain-$(V).pyz dist/SHA256SUMS
 	cd dist && sha256sum -c SHA256SUMS
